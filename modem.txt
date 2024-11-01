@@ -1,0 +1,10 @@
+1.msm_smd_pkt: modem related
+Description: Kernel has problems with loading/communicating with modem(we don't know yet), here are the error messages
+
+1 - Present on older builds, specifically lineage-18.1 branch
+smd_pkt_open: wait on smd_pkt_dev id:0 allocation failed rc=-110
+
+2 - Only present on newer kernels
+[ 3180.004586] smd_pkt_open: DATA5_CNTL open failed -19
+[ 3182.116667] selinux: SELinux:  Could not stat /sys/bus/platform/drivers/DATA5_CNTL: No such file or directory.
+Spams dmesg, temporary fixed with disabling error printing in msm_smd_pkt.c, Fix ASAP.
