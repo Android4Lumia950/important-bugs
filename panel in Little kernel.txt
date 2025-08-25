@@ -62,7 +62,7 @@ Equivalent working in linux:
 
 
 
-The cause of the bringup only showing 1 dtsi with the current latest panel header for LK is unknown. With the configs taken from linux it's even worse. Solution might be bruteforcing. The problem might entirely be in something else.
+The cause of the bringup only showing 1 dsi with the current latest panel header for LK is unknown. With the configs taken from linux it's even worse. Solution might be bruteforcing. The problem might entirely be in something else.
 
 If you wish to help, check out:
 USE THE PANEL BRANCH!
