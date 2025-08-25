@@ -1,0 +1,85 @@
+Hi, fellow reader
+
+LK or "Little kernel" is the bootloader that we use on our lumia 950's to boot android and other useful stuff such as recovery and load the kernel, get access to fastboot, etc..
+
+THE LINUX KERNEL PANEL DTSI CONVERTED TO LK PANEL HEADER DOESNT WORK IN LK!
+
+We are trying hard to have the panel work in LK but we are not succeeding (only half dsi works, bringup till then done by @sonic011gamer)
+Panel in little kernel isn't anything required for android to run but its something useful considering the current state of things:
+
+-If you want to boot into bootloader you have to warm reboot the phone into bootloader again to actually get any kind of display.. This is not good for debugging especially at installer level or other kinds of debugging. 
+
+Benefits of bringup are:
+
+LK passes panel and details to OS, which is good for panel init and easier porting of stuff on the device.
+
+You can help us fix this, we currently have absolutely no idea what to do or touch, considering: in LK's oem_panel.c in msm8994 target where duke panel is added, there are FLAGS, which tell the bootloader how to init and proceed with the given panel configuration. 
+These flags aren't present in linux so we don't exactly know which ones to set, because we haven't got it to boot with fully working panel, yet.
+
+Second clue is that I (think) we managed to narrow it down a little and the problem is hiding in the panel header for duke itself, it's in the reset sequence :
+As i changed it i saw different corrupted outputs coming out of the panel, but the dsis syncing 
+
+/*---------------------------------------------------------------------------*/
+/* Panel reset sequence  - LK HEADER                                         */
+/*---------------------------------------------------------------------------*/
+static struct panel_reset_sequence duke_wqhd_dualdsi_cmd_reset_seq = {
+	{1, 1, 1, }, //pin_state
+	{1, 0, 1, }, //sleep
+	20  //pin_direction
+};
+
+
+WORKING LINUX IMPLEMENTATION:
+
+qcom,mdss-dsi-reset-sequence = <1 17>, <0 17>, <1 17>;
+
+--------------------------------------------------------------------------------------
+
+YOU can modify this along with: 
+
+
+/*---------------------------------------------------------------------------*/
+/* Panel timing   - LK HEADER                                                */
+/*---------------------------------------------------------------------------*/
+static const uint32_t duke_wqhd_dualdsi_cmd_timings[] = {
+	0x97, 0x5A, 0x3E, 0x00, 0x9A, 0x9A, 0x48, 0x5E, 0x4B, 0x03, 0x04, 0x00
+};
+
+static struct panel_timing duke_wqhd_dualdsi_cmd_timing_info = {
+	0, //dsi_mdp_trigger
+	4, //dsi_dma_trigger
+	0x05e, //tclk_post
+	0x5 //tclk_pre
+};
+
+
+Equivalent working in linux:
+
+		qcom,mdss-dsi-t-clk-post = <0x5>;
+		qcom,mdss-dsi-t-clk-pre = <0x5e>;
+  		qcom,mdss-dsi-dma-trigger = "trigger_sw";
+		qcom,mdss-dsi-mdp-trigger = "none";
+
+
+
+The cause of the bringup only showing 1 dtsi with the current latest panel header for LK is unknown. With the configs taken from linux it's even worse. Solution might be bruteforcing. The problem might entirely be in something else.
+
+If you wish to help, check out:
+USE THE PANEL BRANCH!
+panel header: 
+
+https://github.com/Android4Lumia950/lk2nd/blob/panel/dev/gcdb/display/include/panel_duke_cmd.h
+
+oem_panel.c:
+
+https://github.com/Android4Lumia950/lk2nd/blob/panel/target/msm8994/oem_panel.c
+
+Building is in: https://github.com/Android4Lumia950/lk2nd/blob/panel/Documentation/building.md
+(Just download the toolchains from there and use the lkimg.sh script :)
+
+If you think sonic's tequilla (650 panel bringup which based the 950 panel) can help you check it out at:
+https://github.com/sonic011gamer/lk
+
+It has its panel working in LK.
+
+Good luck!
